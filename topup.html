@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PERHATIAN: Ganti CLIENT_KEY_ANDA dengan Client Key Midtrans Anda -->
+    <script type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="CLIENT_KEY_ANDA"></script>
+    <title>Top Up Saldo - Vadd VPN Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --text-primary: #333333;
+            --text-secondary: #777777; --accent-purple: #8e44ad; --accent-green: #2ecc71;
+        }
+        body.dark {
+            --bg-color: #121212; --card-bg-color: #1e1e1e; --text-primary: #eaeaea;
+            --text-secondary: #aaaaaa; --accent-purple: #9b59b6; --accent-green: #27ae60;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-primary); transition: background-color 0.3s; }
+        .container { max-width: 500px; margin: 0 auto; padding: 2rem; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+        .header a { color: var(--text-primary); text-decoration: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background-color: var(--card-bg-color); border-radius: 50%; }
+        .header h1 { font-size: 1.5rem; }
+        .card { background-color: var(--card-bg-color); border-radius: 1rem; padding: 1.5rem; }
+        h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; }
+        .nominal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .nominal-btn { background-color: var(--bg-color); border: 2px solid var(--bg-color); border-radius: 0.75rem; padding: 1rem; text-align: center; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .nominal-btn.active { border-color: var(--accent-purple); color: var(--accent-purple); }
+        .input-group { margin-bottom: 1.5rem; }
+        .input-field { width: 100%; background-color: var(--bg-color); border: 2px solid transparent; border-radius: 0.5rem; padding: 0.75rem; color: var(--text-primary); outline: none; font-size: 1rem; text-align: center; }
+        .input-field:focus { border-color: var(--accent-purple); }
+        .topup-btn { width: 100%; background-color: var(--accent-green); color: white; border: none; padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; cursor: pointer; margin-top: 2rem; }
+        .topup-btn:disabled { background-color: var(--text-secondary); }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <header class="header">
+            <a href="/dashboard"><span class="material-symbols-outlined">arrow_back</span></a>
+            <h1>Top Up Saldo</h1>
+        </header>
+        <div class="card">
+            <h2>1. Pilih Nominal</h2>
+            <div class="nominal-grid">
+                <button class="nominal-btn" data-amount="10000">Rp 10.000</button>
+                <button class="nominal-btn" data-amount="25000">Rp 25.000</button>
+                <button class="nominal-btn" data-amount="50000">Rp 50.000</button>
+                <button class="nominal-btn" data-amount="100000">Rp 100.000</button>
+            </div>
+            
+            <h2>2. Atau Masukkan Jumlah Lain</h2>
+            <div class="input-group">
+                <input type="number" id="custom-amount" class="input-field" placeholder="Contoh: 15000">
+            </div>
+            
+            <button id="topup-button" class="topup-btn">Lanjutkan ke Pembayaran</button>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const baseUrl = window.location.origin;
+            let selectedAmount = 0;
+            const nominalBtns = document.querySelectorAll('.nominal-btn');
+            const customAmountInput = document.getElementById('custom-amount');
+            const topupButton = document.getElementById('topup-button');
+
+            function updateSelection(amount) {
+                selectedAmount = amount;
+                nominalBtns.forEach(btn => {
+                    if (parseInt(btn.dataset.amount) === amount) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                if (document.activeElement !== customAmountInput) {
+                    customAmountInput.value = '';
+                }
+            }
+
+            nominalBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    updateSelection(parseInt(btn.dataset.amount));
+                });
+            });
+
+            customAmountInput.addEventListener('input', () => {
+                const amount = parseInt(customAmountInput.value);
+                if (amount > 0) {
+                    updateSelection(amount);
+                } else {
+                    selectedAmount = 0;
+                    nominalBtns.forEach(b => b.classList.remove('active'));
+                }
+            });
+
+            topupButton.addEventListener('click', async () => {
+                if (selectedAmount < 10000) {
+                    alert('Minimum top up adalah Rp 10.000.');
+                    return;
+                }
+
+                topupButton.disabled = true;
+                topupButton.textContent = 'Memproses...';
+
+                try {
+                    const response = await fetch(`${baseUrl}/api/create_transaction`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ amount: selectedAmount })
+                    });
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        snap.pay(result.token, {
+                            onSuccess: function(result){
+                                window.location.href = `${baseUrl}/dashboard`;
+                            },
+                            onPending: function(result){
+                                alert("Menunggu pembayaran Anda!");
+                            },
+                            onError: function(result){
+                                alert("Pembayaran gagal!");
+                                topupButton.disabled = false;
+                                topupButton.textContent = 'Lanjutkan ke Pembayaran';
+                            },
+                            onClose: function(){
+                                topupButton.disabled = false;
+                                topupButton.textContent = 'Lanjutkan ke Pembayaran';
+                            }
+                        });
+                    } else {
+                        alert(`Error: ${result.message}`);
+                        topupButton.disabled = false;
+                        topupButton.textContent = 'Lanjutkan ke Pembayaran';
+                    }
+                } catch (e) {
+                    alert('Gagal terhubung ke server.');
+                    topupButton.disabled = false;
+                    topupButton.textContent = 'Lanjutkan ke Pembayaran';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

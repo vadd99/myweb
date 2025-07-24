@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beli Config - Vadd VPN Store</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --text-primary: #333333;
+            --text-secondary: #777777; --accent-purple: #8e44ad; --accent-blue: #007bff;
+            --accent-green: #28a745; --accent-red: #e74c3c;
+            --shadow-strong: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        body.dark {
+            --bg-color: #121212; --card-bg-color: #1e1e1e; --text-primary: #eaeaea;
+            --text-secondary: #aaaaaa; --accent-purple: #9b59b6; --accent-blue: #007bff;
+            --accent-green: #2ecc71; --accent-red: #ef4444;
+            --shadow-strong: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-primary); transition: background-color 0.3s; }
+        .container { max-width: 500px; margin: 0 auto; padding: 2rem; }
+        .header { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+        .header a { color: var(--text-primary); text-decoration: none; display: flex; }
+        .header h1 { font-size: 1.5rem; }
+        .card { background-color: var(--card-bg-color); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        body.dark .card { box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        h2 { font-size: 1.1rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; }
+        .protocol-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .protocol-btn {
+            background-color: var(--bg-color); border: 2px solid var(--bg-color); border-radius: 0.75rem;
+            padding: 1rem; text-align: center; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .protocol-btn.active { border-color: var(--accent-purple); color: var(--accent-purple); }
+        .input-group { margin-bottom: 1.5rem; }
+        .input-field {
+            width: 100%; background-color: var(--bg-color); border: 2px solid transparent;
+            border-radius: 0.5rem; padding: 0.75rem; color: var(--text-primary); outline: none;
+            font-family: 'Poppins', sans-serif; font-size: 1rem;
+        }
+        .input-field:focus { border-color: var(--accent-purple); }
+        .checkout-details ul { list-style: none; padding: 0; margin-bottom: 2rem; }
+        .checkout-details li { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 0.75rem 0; 
+            border-bottom: 1px solid var(--bg-color); 
+        }
+        .checkout-details li span:first-child { 
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .checkout-details li span:last-child { 
+            font-weight: 600; 
+            text-align: right;
+        }
+        .buy-btn {
+            width: 100%; background-color: var(--accent-purple); color: white; border: none;
+            padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 0.75rem; cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .buy-btn:hover { background-color: #7a3a99; }
+        body.dark .buy-btn:hover { background-color: #ae69d3; }
+
+        /* CSS untuk Modal Notifikasi Kustom */
+        .sheet-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .sheet-overlay.visible { opacity: 1; pointer-events: auto; }
+        .custom-alert {
+            position: fixed; top: 50%; left: 50%;
+            width: 90%; max-width: 380px;
+            background-color: var(--card-bg-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow-strong);
+            text-align: center;
+            padding: 2rem;
+            z-index: 90;
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+        }
+        .custom-alert.visible {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .custom-alert-icon-wrapper {
+            width: 64px; height: 64px;
+            margin: 0 auto 1.25rem auto;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .custom-alert-icon-wrapper .material-symbols-outlined { font-size: 36px; }
+        .custom-alert-icon-wrapper.success { background-color: rgba(46, 204, 113, 0.15); color: var(--accent-green); }
+        .custom-alert-icon-wrapper.error { background-color: rgba(231, 76, 60, 0.15); color: var(--accent-red); }
+        .custom-alert-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .custom-alert-message { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 2rem; }
+        .custom-alert-buttons { display: flex; gap: 1rem; }
+        .custom-alert-button {
+            width: 100%; border: none; border-radius: 12px;
+            padding: 0.8rem; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .btn-primary-fill { background-color: var(--accent-purple); color: white; }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <header class="header">
+            <a href="/dashboard"><span class="material-symbols-outlined">arrow_back</span></a>
+            <h1>Beli Config Baru</h1>
+        </header>
+        <div class="card">
+            <h2>1. Pilih Jenis Akun</h2>
+            <div class="protocol-selector">
+                <button class="protocol-btn active" data-protocol="vmess">VMESS</button>
+                <button class="protocol-btn" data-protocol="trojan">TROJAN</button>
+            </div>
+            
+            <h2>2. Masukkan Username Config</h2>
+            <div class="input-group">
+                <input type="text" id="config-username" class="input-field" placeholder="Nama untuk config Anda (bebas)">
+            </div>
+            
+            <div class="checkout-details">
+                <h2>3. Detail Checkout</h2>
+                <ul>
+                    <li><span>Jenis Akun</span> <span id="detail-jenis">VMESS</span></li>
+                    <li><span>Harga Per Bulan</span> <span>Rp 7.000</span></li>
+                    <li><span>Server</span> <span>Singapore</span></li>
+                    <!-- [DIPERBAIKI] Spasi sebelum kurung tutup dihapus -->
+                    <li><span>Limit</span> <span>Unlimited</span></li>
+                </ul>
+            </div>
+            
+            <button id="buy-button" class="buy-btn">Beli Config</button>
+        </div>
+    </div>
+
+    <!-- HTML untuk Modal Notifikasi Kustom -->
+    <div id="custom-alert-overlay" class="sheet-overlay"></div>
+    <div id="custom-alert-modal" class="custom-alert">
+        <div id="custom-alert-icon" class="custom-alert-icon-wrapper">
+            <span class="material-symbols-outlined"></span>
+        </div>
+        <h3 id="custom-alert-title" class="custom-alert-title"></h3>
+        <p id="custom-alert-message" class="custom-alert-message"></p>
+        <div id="custom-alert-buttons" class="custom-alert-buttons"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sistem Modal Notifikasi
+            const alertModal = {
+                overlay: document.getElementById('custom-alert-overlay'),
+                modal: document.getElementById('custom-alert-modal'),
+                icon: document.getElementById('custom-alert-icon'),
+                iconSpan: document.getElementById('custom-alert-icon').querySelector('span'),
+                title: document.getElementById('custom-alert-title'),
+                message: document.getElementById('custom-alert-message'),
+                buttons: document.getElementById('custom-alert-buttons'),
+                
+                show(options) {
+                    this.title.textContent = options.title || '';
+                    this.message.innerHTML = options.message || '';
+                    
+                    this.icon.className = 'custom-alert-icon-wrapper';
+                    if (options.type) {
+                        this.icon.classList.add(options.type);
+                        this.iconSpan.textContent = options.type === 'success' ? 'check_circle' : 'error';
+                    }
+
+                    this.buttons.innerHTML = '';
+                    const okBtn = document.createElement('button');
+                    okBtn.className = 'custom-alert-button btn-primary-fill';
+                    okBtn.textContent = options.okText || 'Mengerti';
+                    okBtn.onclick = () => {
+                        this.hide();
+                        if (options.onOk) options.onOk();
+                    };
+                    this.buttons.appendChild(okBtn);
+                    
+                    this.overlay.classList.add('visible');
+                    this.modal.classList.add('visible');
+                },
+                
+                hide() {
+                    this.overlay.classList.remove('visible');
+                    this.modal.classList.remove('visible');
+                }
+            };
+            alertModal.overlay.addEventListener('click', () => alertModal.hide());
+
+            // Logika Halaman
+            let selectedProtocol = 'vmess';
+            const protocolBtns = document.querySelectorAll('.protocol-btn');
+            
+            protocolBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    protocolBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedProtocol = btn.dataset.protocol;
+                    document.getElementById('detail-jenis').textContent = selectedProtocol.toUpperCase();
+                });
+            });
+
+            document.getElementById('buy-button').addEventListener('click', async () => {
+                const remark = document.getElementById('config-username').value.trim();
+                if (!remark) {
+                    alertModal.show({
+                        type: 'error',
+                        title: 'Input Kosong',
+                        message: 'Username config tidak boleh kosong!'
+                    });
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/api/create_config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            protocol: selectedProtocol,
+                            remark: remark
+                        })
+                    });
+                    
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        alertModal.show({
+                            type: 'success',
+                            title: 'Berhasil!',
+                            message: result.message,
+                            okText: 'Lihat Akun',
+                            onOk: () => {
+                                if (result.config_id) {
+                                    window.location.href = `/subscription/${result.config_id}`;
+                                } else {
+                                    window.location.href = '/dashboard';
+                                }
+                            }
+                        });
+                    } else {
+                        alertModal.show({
+                            type: 'error',
+                            title: 'Gagal',
+                            message: result.message || 'Terjadi kesalahan saat membuat akun.'
+                        });
+                    }
+                } catch(e) {
+                    alertModal.show({
+                        type: 'error',
+                        title: 'Error',
+                        message: 'Tidak dapat terhubung ke server. Silakan coba lagi nanti.'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

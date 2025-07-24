@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Vadd VPN Store</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --text-primary: #333333;
+            --text-secondary: #777777; --accent-green: #28a745; --accent-purple: #8e44ad;
+            --accent-blue: #007bff; --accent-blue-light: #3395ff; --accent-red: #e74c3c;
+            --icon-color: #555; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-strong: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        body.dark {
+            --bg-color: #121212; --card-bg-color: #1e1e1e; --text-primary: #eaeaea;
+            --text-secondary: #aaaaaa; --accent-green: #2ecc71; --accent-purple: #9b59b6;
+            --accent-blue: #007bff; --accent-blue-light: #58a6ff; --accent-red: #c0392b;
+            --icon-color: #bbbbbb; --shadow: none; --shadow-strong: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-primary);
+            display: flex; flex-direction: column; transition: background-color 0.3s, color 0.3s;
+        }
+        .page-wrapper { display: flex; flex-direction: column; height: 100%; }
+        header {
+            padding: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+        }
+        .title { font-size: 1.5rem; font-weight: 600; }
+        .theme-toggle-btn, .header-icon {
+            background-color: var(--card-bg-color); border: none; width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer;
+            color: var(--icon-color); box-shadow: var(--shadow); transition: all 0.3s;
+            text-decoration: none;
+        }
+        .theme-toggle-btn .sun { display: none; }
+        .dark .theme-toggle-btn .sun { display: block; }
+        .dark .theme-toggle-btn .moon { display: none; }
+        
+        .welcome-container {
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 2rem;
+        }
+        .welcome-text {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        .welcome-subtext {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .action-footer {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex-shrink: 0;
+        }
+        .action-btn {
+            width: 100%; border: none; border-radius: 9999px;
+            padding: 1rem; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .btn-primary { background-color: var(--accent-purple); color: white; }
+        .btn-secondary { background-color: var(--card-bg-color); color: var(--text-primary); box-shadow: var(--shadow-strong); }
+
+        /* Bottom Sheet Styles */
+        .sheet-overlay {
+            position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
+            z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .sheet-overlay.visible { opacity: 1; pointer-events: auto; }
+        .bottom-sheet-panel {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 70;
+            background-color: var(--card-bg-color); border-top-left-radius: 20px; border-top-right-radius: 20px;
+            padding: 1rem 1.5rem 2rem 1.5rem; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 -10px 30px rgba(0,0,0,0.2);
+            max-height: 90vh; display: flex; flex-direction: column;
+        }
+        .bottom-sheet-panel.visible { transform: translateY(0); }
+        .sheet-grabber { width: 50px; height: 5px; background-color: var(--text-secondary); opacity: 0.5; border-radius: 2.5px; margin: 0 auto 1rem auto; flex-shrink: 0; }
+        .sheet-header { text-align: center; font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--text-primary); flex-shrink: 0; }
+        .sheet-content { overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+        
+        .input-group { position: relative; }
+        .input-group .material-symbols-outlined {
+            position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        .input-field {
+            width: 100%; background-color: var(--bg-color); border: 2px solid transparent;
+            border-radius: 12px; padding: 1rem 1rem 1rem 3.5rem;
+            color: var(--text-primary); outline: none; transition: border-color 0.2s;
+        }
+        .input-field:focus { border-color: var(--accent-purple); }
+        
+        .social-login { text-align: center; margin: 1rem 0; }
+        .social-login p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        .social-icons { display: flex; justify-content: center; gap: 1.5rem; }
+        .social-icon {
+            width: 50px; height: 50px; border-radius: 50%;
+            background-color: var(--bg-color); display: flex;
+            align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .social-icon:hover { transform: scale(1.1); }
+        .social-icon svg { width: 24px; height: 24px; }
+
+        /* Top Sheet Styles (CS Support) */
+        .top-sheet-panel {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 70;
+            background-color: var(--card-bg-color); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
+            padding: 2rem 1.5rem 1.5rem 1.5rem; transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .top-sheet-panel.visible { transform: translateY(0); }
+        .contact-list { display: flex; flex-direction: column; gap: 1rem; }
+        .contact-item {
+            display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: var(--bg-color);
+            border-radius: 12px; text-decoration: none; color: var(--text-primary); font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .contact-item:hover { background-color: color-mix(in srgb, var(--accent-purple) 15%, transparent); }
+        .contact-item svg { width: 28px; height: 28px; }
+
+        /* Custom Alert Modal Styles */
+        .custom-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background-color: var(--card-bg-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-strong);
+            z-index: 100;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            padding: 2rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .custom-alert.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .custom-alert-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+        }
+        .custom-alert-icon.success {
+            background-color: rgba(40, 167, 69, 0.15);
+            color: var(--accent-green);
+        }
+        .custom-alert-icon.error {
+            background-color: rgba(231, 76, 60, 0.15);
+            color: var(--accent-red);
+        }
+        .custom-alert-icon .material-symbols-outlined {
+            font-size: 36px;
+        }
+        .custom-alert-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .custom-alert-message {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body class="dark">
+    <div class="page-wrapper">
+        <header>
+            <button id="cs-support-btn" class="header-icon">
+                <span class="material-symbols-outlined">support_agent</span>
+            </button>
+            <h1 class="title">Vadd VPN Store</h1>
+            <button id="theme-toggle" class="theme-toggle-btn">
+                <span class="material-symbols-outlined moon">dark_mode</span>
+                <span class="material-symbols-outlined sun">light_mode</span>
+            </button>
+        </header>
+
+        <main class="welcome-container">
+            <h2 class="welcome-text">Halo!</h2>
+            <p class="welcome-subtext">WELCOME TO VADD VPN STORE</p>
+        </main>
+
+        <footer class="action-footer">
+            <button id="login-btn" class="action-btn btn-primary">
+                <span class="material-symbols-outlined">login</span>
+                Masuk
+            </button>
+            <button id="signup-btn" class="action-btn btn-secondary">
+                <span class="material-symbols-outlined">person_add</span>
+                Daftar
+            </button>
+        </footer>
+    </div>
+
+    <div id="sheet-overlay" class="sheet-overlay"></div>
+
+    <div id="top-sheet-panel" class="top-sheet-panel">
+         <div class="top-sheet-content">
+            <h2 class="sheet-header">Ada kendala? Hubungi kami!</h2>
+            <div class="contact-list">
+                <a href="https://wa.me/6283862724915" target="_blank" class="contact-item"><svg viewBox="0 0 24 24" fill="#25D366"><path d="M16.75 13.96c.25.79-.39 1.51-1.61 2.05-.62.27-1.39.4-2.61.13-1.29-.29-2.52-.76-3.69-1.93s-1.64-2.4-1.93-3.69c-.27-1.22-.14-1.99.13-2.61.54-1.22 1.26-1.86 2.05-1.61.27.08.5.21.69.37.21.19.33.44.39.72.08.37-.02.82-.24 1.34l-.49 1.13c-.11.25-.13.53-.06.79.23.85.74 1.63 1.48 2.37.74.74 1.52 1.25 2.37 1.48.26.07.54.05.79-.06l1.13-.49c.52-.22.97-.32 1.34-.24.28.06.53.18.72.39.16.19.29.42.37.69zm-5.28-10.43c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9m0-2c6.08 0 11 4.92 11 11s-4.92 11-11 11-11-4.92-11-11 4.92-11 11-11z"/></svg><span>WHATSAPP</span></a>
+                <a href="https://t.me/vadd999" target="_blank" class="contact-item"><svg viewBox="0 0 24 24" fill="#0088cc"><path d="M9.78 18.65l.28-4.23-3.06-2.65-4.18 2.52 5.32 2.62.94 1.74zm-3.02-4.83l3.34-2.92-4.9-2.02 6.54 2.53.23 4.42-5.21-2.01zM22 11.33c0-4.02-3.28-7.3-7.3-7.3-4.02 0-7.3 3.28-7.3 7.3s3.28 7.3 7.3 7.3c4.02 0 7.3-3.28 7.3-7.3z"/></svg><span>TELEGRAM</span></a>
+            </div>
+         </div>
+    </div>
+
+    <div id="login-sheet-panel" class="bottom-sheet-panel">
+        <div class="sheet-grabber"></div>
+        <h2 class="sheet-header">Masuk ke Akun Anda</h2>
+        <div class="sheet-content">
+            <div class="input-group">
+                <span class="material-symbols-outlined">person</span>
+                <input type="text" id="login-username" class="input-field" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">lock</span>
+                <input type="password" id="login-password" class="input-field" placeholder="Password">
+            </div>
+            <div class="social-login">
+                <p>atau masuk dengan</p>
+                <div class="social-icons">
+                    <div class="social-icon"><svg fill="#DB4437" viewBox="0 0 24 24"><path d="M21.5,12.2c0-0.8-0.1-1.5-0.2-2.2H12.2v4.2h5.2c-0.2,1.4-1,2.5-2.2,3.3v2.7h3.5C20.6,18.1,21.5,15.4,21.5,12.2z"/><path d="M12.2,21.8c2.5,0,4.6-0.8,6.1-2.2l-3.5-2.7c-0.8,0.6-1.9,0.9-3.1,0.9c-2.4,0-4.4-1.6-5.1-3.8H3.4v2.8 C5,19.6,8.3,21.8,12.2,21.8z"/><path d="M7.1,14.1c-0.2-0.6-0.3-1.2-0.3-1.8s0.1-1.2,0.3-1.8V7.8H3.4C2.5,9.6,2,11.7,2,14.1s0.5,4.5,1.4,6.3L7.1,17.6z"/><path d="M12.2,6.6c1.4,0,2.6,0.5,3.5,1.4l3.1-3.1C16.8,3.2,14.7,2,12.2,2C8.3,2,5,4.2,3.4,7.8l3.7,2.8C7.8,8.2,9.8,6.6,12.2,6.6z"/></svg></div>
+                    <div class="social-icon"><svg fill="#1877F2" viewBox="0 0 24 24"><path d="M22,12c0-5.5-4.5-10-10-10S2,6.5,2,12c0,5,3.7,9.1,8.4,9.9v-7H7.9V12h2.5V9.8c0-2.5,1.5-3.9,3.8-3.9 c1.1,0,2.2,0.2,2.2,0.2v2.5h-1.3c-1.2,0-1.6,0.8-1.6,1.6V12h2.8l-0.4,2.9h-2.3v7C18.3,21.1,22,17,22,12z"/></svg></div>
+                </div>
+            </div>
+            <button id="login-submit-btn" class="action-btn btn-primary mt-4">Masuk</button>
+        </div>
+    </div>
+
+    <div id="signup-sheet-panel" class="bottom-sheet-panel">
+        <div class="sheet-grabber"></div>
+        <h2 class="sheet-header">Buat Akun Baru</h2>
+        <div class="sheet-content">
+            <div class="input-group">
+                <span class="material-symbols-outlined">badge</span>
+                <input type="text" id="signup-username" class="input-field" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">person</span>
+                <input type="text" id="signup-fullname" class="input-field" placeholder="Nama Lengkap">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">calendar_month</span>
+                <input type="text" id="signup-birthdate" class="input-field" placeholder="Tanggal Lahir" onfocus="(this.type='date')">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">mail</span>
+                <input type="email" id="signup-email" class="input-field" placeholder="Email">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">call</span>
+                <input type="tel" id="signup-phone" class="input-field" placeholder="No. HP">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">home</span>
+                <input type="text" id="signup-address" class="input-field" placeholder="Alamat">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">lock</span>
+                <input type="password" id="signup-password" class="input-field" placeholder="Password">
+            </div>
+            <div class="input-group">
+                <span class="material-symbols-outlined">lock_reset</span>
+                <input type="password" id="signup-password-confirm" class="input-field" placeholder="Konfirmasi Password">
+            </div>
+            <div class="social-login">
+                <p>atau daftar dengan</p>
+                <div class="social-icons">
+                     <div class="social-icon"><svg fill="#DB4437" viewBox="0 0 24 24"><path d="M21.5,12.2c0-0.8-0.1-1.5-0.2-2.2H12.2v4.2h5.2c-0.2,1.4-1,2.5-2.2,3.3v2.7h3.5C20.6,18.1,21.5,15.4,21.5,12.2z"/><path d="M12.2,21.8c2.5,0,4.6-0.8,6.1-2.2l-3.5-2.7c-0.8,0.6-1.9,0.9-3.1,0.9c-2.4,0-4.4-1.6-5.1-3.8H3.4v2.8 C5,19.6,8.3,21.8,12.2,21.8z"/><path d="M7.1,14.1c-0.2-0.6-0.3-1.2-0.3-1.8s0.1-1.2,0.3-1.8V7.8H3.4C2.5,9.6,2,11.7,2,14.1s0.5,4.5,1.4,6.3L7.1,17.6z"/><path d="M12.2,6.6c1.4,0,2.6,0.5,3.5,1.4l3.1-3.1C16.8,3.2,14.7,2,12.2,2C8.3,2,5,4.2,3.4,7.8l3.7,2.8C7.8,8.2,9.8,6.6,12.2,6.6z"/></svg></div>
+                    <div class="social-icon"><svg fill="#1877F2" viewBox="0 0 24 24"><path d="M22,12c0-5.5-4.5-10-10-10S2,6.5,2,12c0,5,3.7,9.1,8.4,9.9v-7H7.9V12h2.5V9.8c0-2.5,1.5-3.9,3.8-3.9 c1.1,0,2.2,0.2,2.2,0.2v2.5h-1.3c-1.2,0-1.6,0.8-1.6,1.6V12h2.8l-0.4,2.9h-2.3v7C18.3,21.1,22,17,22,12z"/></svg></div>
+                </div>
+            </div>
+            <button id="signup-submit-btn" class="action-btn btn-primary mt-4">Daftar</button>
+        </div>
+    </div>
+
+    <div id="custom-alert-overlay-new" class="sheet-overlay"></div>
+    <div id="custom-alert-modal" class="custom-alert">
+        <div class="custom-alert-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+        </div>
+        <h3 id="custom-alert-title"></h3>
+        <p id="custom-alert-message"></p>
+        <button id="custom-alert-button" class="action-btn btn-primary"></button>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Tema
+        const themeToggle = document.getElementById('theme-toggle');
+        const applyTheme = (isDark) => { document.body.classList.toggle('dark', isDark); };
+        let isDarkMode = localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        applyTheme(isDarkMode);
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            applyTheme(isDarkMode);
+        });
+
+        // Sistem Kontrol Panel Terpadu
+        const panels = [
+            { id: 'login-sheet', triggerId: 'login-btn', panelId: 'login-sheet-panel' },
+            { id: 'signup-sheet', triggerId: 'signup-btn', panelId: 'signup-sheet-panel' },
+            { id: 'top-sheet', triggerId: 'cs-support-btn', panelId: 'top-sheet-panel' }
+        ];
+        
+        const overlay = document.getElementById('sheet-overlay');
+        let activePanel = null;
+
+        const closeAllPanels = () => {
+            if (activePanel) {
+                activePanel.classList.remove('visible');
+                activePanel = null;
+            }
+            overlay.classList.remove('visible');
+        };
+
+        const openPanel = (panelId) => {
+            closeAllPanels();
+            const panelElement = document.getElementById(panelId);
+            if (panelElement) {
+                activePanel = panelElement;
+                activePanel.classList.add('visible');
+                overlay.classList.add('visible');
+            }
+        };
+
+        panels.forEach(p => {
+            document.getElementById(p.triggerId)?.addEventListener('click', () => openPanel(p.panelId));
+        });
+        
+        overlay.addEventListener('click', closeAllPanels);
+        
+        // Sistem Notifikasi Modal Kustom
+        const customAlertModal = document.getElementById('custom-alert-modal');
+        const customAlertOverlay = document.getElementById('custom-alert-overlay-new');
+        const customAlertTitle = document.getElementById('custom-alert-title');
+        const customAlertMessage = document.getElementById('custom-alert-message');
+        const customAlertButton = document.getElementById('custom-alert-button');
+        const customAlertIcon = customAlertModal.querySelector('.custom-alert-icon');
+        const customAlertIconSpan = customAlertIcon.querySelector('span');
+        let customAlertCallback = null;
+
+        const hideCustomAlert = () => {
+            customAlertModal.classList.remove('visible');
+            customAlertOverlay.classList.remove('visible');
+        };
+
+        const showCustomAlert = (type, title, message, buttonText, callback) => {
+            customAlertTitle.textContent = title;
+            customAlertMessage.textContent = message;
+            customAlertButton.textContent = buttonText;
+            customAlertCallback = callback;
+
+            customAlertIcon.classList.remove('success', 'error');
+            if (type === 'success') {
+                customAlertIconSpan.textContent = 'check_circle';
+                customAlertIcon.classList.add('success');
+            } else if (type === 'error') {
+                customAlertIconSpan.textContent = 'error';
+                customAlertIcon.classList.add('error');
+            }
+            
+            customAlertModal.classList.add('visible');
+            customAlertOverlay.classList.add('visible');
+        };
+
+        customAlertButton.addEventListener('click', () => {
+            hideCustomAlert();
+            if (typeof customAlertCallback === 'function') {
+                customAlertCallback();
+            }
+        });
+        customAlertOverlay.addEventListener('click', hideCustomAlert);
+
+        // --- FUNGSI API (Fetch Asli) ---
+        const signupSubmitBtn = document.getElementById('signup-submit-btn');
+        const loginSubmitBtn = document.getElementById('login-submit-btn');
+
+        signupSubmitBtn.addEventListener('click', async () => {
+            const username = document.getElementById('signup-username').value.trim();
+            const fullName = document.getElementById('signup-fullname').value.trim();
+            const birthDate = document.getElementById('signup-birthdate').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const phone = document.getElementById('signup-phone').value.trim();
+            const address = document.getElementById('signup-address').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const passwordConfirm = document.getElementById('signup-password-confirm').value;
+            
+            if (!username || !password) {
+                showCustomAlert('error', 'Gagal', 'Username dan password tidak boleh kosong!', 'Tutup');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                showCustomAlert('error', 'Gagal', 'Konfirmasi password tidak cocok!', 'Tutup');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        full_name: fullName,
+                        birth_date: birthDate,
+                        email: email,
+                        phone: phone,
+                        address: address
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    closeAllPanels();
+                    showCustomAlert(
+                        'success',
+                        'Pendaftaran Berhasil!',
+                        'Selamat, akun anda berhasil di daftarkan.',
+                        'Lanjutkan Login',
+                        () => {
+                            openPanel('login-sheet-panel');
+                        }
+                    );
+                } else {
+                    showCustomAlert('error', 'Pendaftaran Gagal', result.message || 'Terjadi kesalahan.', 'Tutup');
+                }
+            } catch (error) {
+                console.error('Error during signup:', error);
+                showCustomAlert('error', 'Error', 'Tidak dapat terhubung ke server. Coba lagi nanti.', 'Tutup');
+            }
+        });
+
+        loginSubmitBtn.addEventListener('click', async () => {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                showCustomAlert('error', 'Gagal', 'Username dan password tidak boleh kosong!', 'Tutup');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    window.location.href = '/dashboard'; 
+                } else {
+                    showCustomAlert('error', 'Login Gagal', result.message || 'Username atau password salah.', 'Coba Lagi');
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                showCustomAlert('error', 'Error', 'Tidak dapat terhubung ke server. Coba lagi nanti.', 'Tutup');
+            }
+        });
+    });
+    </script>
+</body>
+</html>
+

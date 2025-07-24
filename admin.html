@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        :root { --bg: #121212; --panel-bg: #1e1e1e; --text: #eaeaea; --text-secondary: #aaa; --accent: #9b59b6; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 1.5rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { font-size: 1.8rem; }
+        .logout-btn { color: var(--text); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .user-list { display: flex; flex-direction: column; gap: 1rem; }
+        .user-card { background-color: var(--panel-bg); border-radius: 0.75rem; padding: 1.25rem; border: 1px solid #333; }
+        .user-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-label { font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; }
+        .info-value { font-weight: 600; font-size: 1.1rem; }
+        .user-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; border-top: 1px solid #333; padding-top: 1rem; margin-top: 1rem; }
+        .action-button {
+            flex-grow: 1; padding: 0.5rem 1rem; border-radius: 8px; border: none;
+            cursor: pointer; font-weight: 600; display: flex; align-items: center;
+            justify-content: center; gap: 0.5rem; transition: opacity 0.2s; white-space: nowrap;
+        }
+        .action-button:hover { opacity: 0.8; }
+        .btn-saldo { background-color: #27ae60; color: white; }
+        .btn-edit { background-color: #2980b9; color: white; }
+        .btn-delete { background-color: #c0392b; color: white; }
+        .btn-view { background-color: #7f8c8d; color: white; }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; inset: 0; background-color: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            z-index: 100; display: none; align-items: center; justify-content: center;
+            padding: 1rem;
+        }
+        .modal-box {
+            background-color: var(--panel-bg); padding: 2rem; border-radius: 1rem;
+            width: 90%; max-width: 500px; display: flex; flex-direction: column;
+            max-height: 80vh;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-title { font-size: 1.5rem; font-weight: 600; }
+        .modal-close-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 2rem; line-height: 1; }
+        .modal-content { overflow-y: auto; }
+        .modal-input-group { margin-bottom: 1rem; }
+        .modal-label { display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; }
+        .modal-input { width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #333; background-color: #2c2c2c; color: #eaeaea; font-size: 1rem; box-sizing: border-box; }
+        .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; }
+        .modal-btn { padding: 0.6rem 1.2rem; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-confirm { background-color: var(--accent); color: white; }
+        .btn-cancel { background-color: #444; color: var(--text); }
+
+        #configs-list-container { display: flex; flex-direction: column; gap: 0.75rem; }
+        .config-item { background: #2c2c2c; padding: 1rem; border-radius: 8px; }
+        .config-item-details { display: flex; flex-direction: column; }
+        .config-item-remark { font-weight: 600; }
+        .config-item-protocol { font-size: 0.8rem; color: var(--text-secondary); }
+        .config-item-status { font-size: 0.8rem; text-transform: capitalize; }
+        .config-item-status.active { color: #27ae60; }
+        .config-item-status.deleted { color: #c0392b; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Admin Dashboard</h1>
+        <a href="/api/logout" class="logout-btn">
+            <span>Keluar</span>
+            <span class="material-symbols-outlined">logout</span>
+        </a>
+    </header>
+
+    <div id="user-list-container" class="user-list"></div>
+
+    <div id="saldo-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header"><h2 class="modal-title" id="saldo-modal-title"></h2><button class="modal-close-btn">&times;</button></div>
+            <input type="number" id="saldo-input" class="modal-input" placeholder="Masukkan jumlah (e.g., 50000)">
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel">Batal</button>
+                <button id="confirm-saldo-btn" class="modal-btn btn-confirm">Konfirmasi</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header"><h2 class="modal-title" id="edit-modal-title"></h2><button class="modal-close-btn">&times;</button></div>
+            <div class="modal-input-group">
+                <label for="edit-username" class="modal-label">Username</label>
+                <input type="text" id="edit-username" class="modal-input">
+            </div>
+            <div class="modal-input-group">
+                <label for="edit-fullname" class="modal-label">Nama Lengkap</label>
+                <input type="text" id="edit-fullname" class="modal-input">
+            </div>
+            <div class="modal-input-group">
+                <label for="edit-password" class="modal-label">Password Baru (Opsional)</label>
+                <input type="text" id="edit-password" class="modal-input" placeholder="Isi untuk reset password">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn btn-cancel">Batal</button>
+                <button id="confirm-edit-btn" class="modal-btn btn-confirm">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="configs-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title" id="configs-modal-title"></h2>
+                <button class="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-content" id="configs-list-container"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userListContainer = document.getElementById('user-list-container');
+            const saldoModal = document.getElementById('saldo-modal');
+            const editModal = document.getElementById('edit-modal');
+            const configsModal = document.getElementById('configs-modal');
+            let currentUserId = null;
+
+            const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+
+            const renderUsers = (users) => {
+                userListContainer.innerHTML = users.length === 0 
+                ? `<p style="text-align:center;">Belum ada pengguna terdaftar.</p>`
+                : users.map(user => `
+                    <div class="user-card" id="user-card-${user.id}">
+                        <div class="user-info">
+                            <div class="info-item"><span class="info-label">ID</span><span class="info-value">${user.id}</span></div>
+                            <div class="info-item"><span class="info-label">Username</span><span class="info-value" data-username-id="${user.id}">${user.username}</span></div>
+                            <div class="info-item"><span class="info-label">Nama Lengkap</span><span class="info-value" data-fullname-id="${user.id}">${user.full_name || '-'}</span></div>
+                            <div class="info-item"><span class="info-label">Saldo</span><span class="info-value" data-balance-id="${user.id}">${formatCurrency(user.balance)}</span></div>
+                        </div>
+                        <div class="user-actions">
+                            <button class="action-button btn-saldo" data-user-id="${user.id}" data-username="${user.username}"><span class="material-symbols-outlined">add_card</span> Tambah Saldo</button>
+                            <button class="action-button btn-edit" data-user-id="${user.id}" data-username="${user.username}"><span class="material-symbols-outlined">edit</span> Edit Profil</button>
+                            <button class="action-button btn-view" data-user-id="${user.id}" data-username="${user.username}"><span class="material-symbols-outlined">visibility</span> Lihat Config</button>
+                        </div>
+                    </div>
+                `).join('');
+            };
+
+            const fetchUsers = async () => {
+                try {
+                    const response = await fetch('/api/admin/users');
+                    if (!response.ok) { window.location.href = '/admin/login'; return; }
+                    renderUsers(await response.json());
+                } catch (error) {
+                    console.error("Gagal memuat data pengguna:", error);
+                    userListContainer.innerHTML = `<p style="text-align:center;">Gagal memuat data.</p>`;
+                }
+            };
+
+            const openSaldoModal = (userId, username) => {
+                currentUserId = userId;
+                document.getElementById('saldo-modal-title').textContent = `Tambah Saldo untuk ${username}`;
+                document.getElementById('saldo-input').value = '';
+                saldoModal.style.display = 'flex';
+            };
+            
+            const openEditModal = async (userId, username) => {
+                currentUserId = userId;
+                const response = await fetch(`/api/admin/user/${userId}`);
+                const user = await response.json();
+                document.getElementById('edit-modal-title').textContent = `Edit Profil ${username}`;
+                document.getElementById('edit-username').value = user.username;
+                document.getElementById('edit-fullname').value = user.full_name || '';
+                document.getElementById('edit-password').value = '';
+                editModal.style.display = 'flex';
+            };
+            
+            const openConfigsModal = async (userId, username) => {
+                currentUserId = userId;
+                document.getElementById('configs-modal-title').textContent = `Daftar Config ${username}`;
+                const listContainer = document.getElementById('configs-list-container');
+                listContainer.innerHTML = '<p>Memuat...</p>';
+                configsModal.style.display = 'flex';
+
+                const response = await fetch(`/api/admin/user/${userId}/configs`);
+                const configs = await response.json();
+
+                if (configs.length === 0) {
+                    listContainer.innerHTML = '<p>Pengguna ini belum memiliki config.</p>';
+                } else {
+                    listContainer.innerHTML = configs.map(config => `
+                        <div class="config-item">
+                            <div class="config-item-details">
+                                <span class="config-item-remark">${config.remark}</span>
+                                <span class="config-item-protocol">${config.protocol.toUpperCase()}</span>
+                                <span class="config-item-status ${config.status}">${config.status}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            };
+
+            // Event Listeners
+            document.querySelectorAll('.modal-close-btn, .btn-cancel').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saldoModal.style.display = 'none';
+                    editModal.style.display = 'none';
+                    configsModal.style.display = 'none';
+                });
+            });
+
+            document.getElementById('confirm-saldo-btn').addEventListener('click', async () => {
+                const amount = document.getElementById('saldo-input').value;
+                if (!amount || isNaN(amount)) { alert('Masukkan jumlah saldo yang valid.'); return; }
+                const response = await fetch('/api/admin/update_balance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: currentUserId, amount: parseFloat(amount) })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.querySelector(`[data-balance-id='${currentUserId}']`).textContent = formatCurrency(result.new_balance);
+                    saldoModal.style.display = 'none';
+                }
+                alert(result.message);
+            });
+
+            document.getElementById('confirm-edit-btn').addEventListener('click', async () => {
+                const updatedData = {
+                    id: currentUserId,
+                    username: document.getElementById('edit-username').value,
+                    full_name: document.getElementById('edit-fullname').value,
+                    new_password: document.getElementById('edit-password').value
+                };
+                const response = await fetch('/api/admin/user/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.querySelector(`[data-username-id='${currentUserId}']`).textContent = updatedData.username;
+                    document.querySelector(`[data-fullname-id='${currentUserId}']`).textContent = updatedData.full_name || '-';
+                    editModal.style.display = 'none';
+                }
+                alert(result.message);
+            });
+
+            userListContainer.addEventListener('click', (e) => {
+                const saldoBtn = e.target.closest('.btn-saldo');
+                const editBtn = e.target.closest('.btn-edit');
+                const viewBtn = e.target.closest('.btn-view');
+                if (saldoBtn) openSaldoModal(saldoBtn.dataset.userId, saldoBtn.dataset.username);
+                if (editBtn) openEditModal(editBtn.dataset.userId, editBtn.dataset.username);
+                if (viewBtn) openConfigsModal(viewBtn.dataset.userId, viewBtn.dataset.username);
+            });
+
+            await fetchUsers();
+        });
+    </script>
+</body>
+</html>
