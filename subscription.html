@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Akun</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        :root {
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --text-primary: #333333;
+            --text-secondary: #777777; --accent-green: #28a745; --accent-purple: #8e44ad;
+        }
+        body.dark {
+            --bg-color: #121212; --card-bg-color: #1e1e1e; --text-primary: #eaeaea;
+            --text-secondary: #aaaaaa; --accent-green: #2ecc71; --accent-purple: #9b59b6;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-primary); transition: background-color 0.3s; padding: 20px; }
+        .container { max-width: 420px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0 10px; }
+        .header a, .header button {
+            background-color: var(--card-bg-color); border: none; width: 44px; height: 44px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary);
+            text-decoration: none;
+        }
+        .header .sun { display: none; }
+        body.dark .header .sun { display: block; }
+        body.dark .header .moon { display: none; }
+        .success-message {
+            background-color: var(--accent-green); color: white; text-align: center;
+            padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-weight: 600;
+        }
+        .config-card { background-color: var(--card-bg-color); border-radius: 16px; padding: 1.5rem; }
+        .config-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+        .config-link {
+            background-color: var(--bg-color); border: none; width: 100%; text-align: left;
+            padding: 1rem; border-radius: 8px; color: var(--text-secondary); word-break: break-all;
+            font-family: monospace; font-size: 0.9rem; margin-bottom: 1rem;
+        }
+        .copy-btn {
+            width: 100%; background-color: var(--accent-purple); color: white; border: none;
+            padding: 1rem; font-size: 1rem; font-weight: 600; border-radius: 8px; cursor: pointer;
+        }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <header class="header">
+            <a href="/dashboard"><span class="material-symbols-outlined">arrow_back</span></a>
+            <button id="theme-toggle"><span class="material-symbols-outlined moon">dark_mode</span><span class="material-symbols-outlined sun">light_mode</span></button>
+        </header>
+
+        <div class="success-message">
+            Selamat! Config berhasil dibuat.
+        </div>
+
+        <div class="config-card">
+            <h1 class="config-title" id="config-remark">{{ config.remark }}</h1>
+            <p>Ini adalah halaman detail akun Anda:</p>
+            <br>
+            <textarea id="config-link" class="config-link" rows="5" readonly>{{ config.link }}</textarea>
+            <button id="copy-btn" class="copy-btn">Salin Link</button>
+        </div>
+    </div>
+    <script>
+        // Script sederhana untuk tema dan tombol salin
+        const themeToggle = document.getElementById('theme-toggle');
+        const applyTheme = (isDark) => { document.body.classList.toggle('dark', isDark); };
+        let isDarkMode = localStorage.getItem('theme') === 'dark';
+        applyTheme(isDarkMode);
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            applyTheme(isDarkMode);
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            const linkText = document.getElementById('config-link');
+            linkText.select();
+            document.execCommand('copy');
+            alert('Link berhasil disalin!');
+        });
+    </script>
+</body>
+</html>
+

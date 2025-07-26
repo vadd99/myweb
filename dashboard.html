@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vadd VPN Store Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+    <style>
+        /* CSS Inti & Tema (Tidak Berubah) */
+        :root {
+            --bg-color: #f0f2f5; --card-bg-color: #ffffff; --text-primary: #333333;
+            --text-secondary: #777777; --accent-green: #28a745; --accent-purple: #8e44ad;
+            --accent-blue: #007bff; --accent-red: #e74c3c;
+            --icon-color: #555; --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --shadow-strong: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+        }
+        body.dark {
+            --bg-color: #121212; --card-bg-color: #1e1e1e; --text-primary: #eaeaea;
+            --text-secondary: #aaaaaa; --accent-green: #2ecc71; --accent-purple: #9b59b6;
+            --accent-blue: #3b82f6; --accent-red: #ef4444; --icon-color: #bbbbbb; 
+            --shadow: none; --shadow-strong: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-primary); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; transition: background-color 0.3s, color 0.3s; }
+        .container { width: 100%; max-width: 420px; position: relative; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding: 0 10px; }
+        .title { font-size: 1.5rem; font-weight: 600; }
+        .header-icon, .theme-toggle-btn { background-color: var(--card-bg-color); border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--icon-color); box-shadow: var(--shadow); transition: all 0.3s; position: relative; z-index: 20; text-decoration: none; }
+        .theme-toggle-btn .sun { display: none; }
+        .dark .theme-toggle-btn .sun { display: block; }
+        .dark .theme-toggle-btn .moon { display: none; }
+        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem; }
+        .card { background-color: var(--card-bg-color); border-radius: 20px; padding: 1.25rem; box-shadow: var(--shadow-strong); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-clickable:hover { transform: translateY(-5px); box-shadow: 0 15px 25px -5px rgba(0,0,0,0.1); }
+        body.dark .card-clickable:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .card-full { grid-column: span 2; }
+        .card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .icon-bg { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; }
+        .icon-bg .material-symbols-outlined { font-size: 24px; }
+        .bg-green-gradient { background: linear-gradient(135deg, #2ecc71, #28a745); }
+        .bg-purple-gradient { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .bg-blue-gradient { background: linear-gradient(135deg, #3b82f6, #007bff); }
+        .bg-orange-gradient { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .bg-gray-gradient { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        .card-title { font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; }
+        .card-body { font-weight: 700; font-size: 1.5rem; }
+        .saldo-display { color: var(--accent-green); }
+        .username-display { color: var(--accent-purple); }
+        .sub-info { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
+        .fab-transaksi { position: fixed; bottom: 2rem; right: 2rem; z-index: 50; background-color: var(--accent-green); color: var(--card-bg-color); padding: 0.75rem 1.5rem 0.75rem 0.75rem; border-radius: 9999px; border: none; display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; box-shadow: none; transition: transform 0.2s ease; }
+        .fab-transaksi:hover { transform: scale(1.05); }
+        .fab-icon-wrapper { background-color: white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .fab-icon-wrapper svg { width: 24px; height: 24px; fill: #1a2e05; }
+        .sheet-overlay { position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 60; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .sheet-overlay.visible { opacity: 1; pointer-events: auto; }
+        .panel { position: fixed; z-index: 70; background-color: var(--card-bg-color); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; }
+        .panel.visible { transform: translate(0, 0) !important; }
+        .bottom-sheet-panel { bottom: 0; left: 0; right: 0; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 1rem 1.5rem 2rem 1.5rem; transform: translateY(100%); }
+        .sheet-grabber { width: 50px; height: 5px; background-color: var(--text-secondary); opacity: 0.5; border-radius: 2.5px; margin: 0 auto 1rem auto; }
+        .sheet-header { text-align: center; font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--text-primary); }
+        .sheet-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .sheet-menu-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.25rem 1rem; background-color: var(--bg-color); border-radius: 16px; text-decoration: none; text-align: center; }
+        .tile-icon-background { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; color: white; }
+        .bg-gradient-green { background: linear-gradient(135deg, var(--accent-green), #55dd7a); }
+        .bg-gradient-purple { background: linear-gradient(135deg, var(--accent-purple), #a968c9); }
+        .tile-text { display: flex; flex-direction: column; }
+        .tile-title { font-weight: 600; font-size: 1rem; color: var(--text-primary); }
+        .tile-subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        .top-sheet-panel { top: 0; left: 0; right: 0; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; padding: 2rem 1.5rem 1.5rem 1.5rem; transform: translateY(-100%); }
+        .contact-list { display: flex; flex-direction: column; gap: 1rem; }
+        .contact-item { display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: var(--bg-color); border-radius: 12px; text-decoration: none; color: var(--text-primary); font-weight: 500; }
+        .contact-item svg { width: 28px; height: 28px; }
+        .side-sheet-panel { top: 0; right: 0; bottom: 0; width: 90%; max-width: 350px; transform: translateX(100%); }
+        .side-sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1rem 0 1.5rem; }
+        .side-sheet-title { font-size: 1.25rem; font-weight: 600; }
+        .side-sheet-content { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
+        .profile-top-section { display: flex; flex-direction: column; align-items: center; margin-bottom: 2.5rem; text-align: center;}
+        .profile-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--card-bg-color); }
+        .profile-name-section { display: flex; gap: 0.5rem; align-items: center; margin-top: 1rem; }
+        .profile-name { font-size: 1.5rem; font-weight: 700; }
+        #edit-profile-btn { background: none; border: none; color: var(--accent-blue); cursor: pointer; display: flex; align-items: center; gap: 0.25rem; font-size: 0.9rem; font-weight: 600;}
+        .profile-details-list { display: flex; flex-direction: column; gap: 1.5rem; }
+        .profile-info-item { display: flex; gap: 1.25rem; align-items: flex-start; }
+        .profile-info-item .material-symbols-outlined { color: var(--text-secondary); margin-top: 0.2rem; }
+        .profile-info-text { display: flex; flex-direction: column; width: 100%; }
+        .profile-info-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .profile-info-value { font-size: 1rem; font-weight: 500; }
+        .profile-info-input { width: 100%; border: none; border-bottom: 2px solid var(--accent-purple); background-color: var(--bg-color); border-radius: 4px; padding: 0.5rem; color: var(--text-primary); font-size: 1rem; outline: none; font-family: 'Poppins', sans-serif; }
+        .side-sheet-footer { padding: 1.5rem; border-top: 1px solid var(--bg-color); display: flex; flex-direction: column; gap: 0.75rem; }
+        .footer-btn { width: 100%; border: none; padding: 0.75rem; border-radius: 12px; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center; }
+        #save-profile-btn { background-color: var(--accent-green); color: white; }
+        #save-profile-btn:disabled { background-color: var(--text-secondary); cursor: not-allowed; }
+        #logout-btn { background-color: var(--accent-red); color: white; }
+        .fullscreen-modal { inset: 0; transform: translateX(100%); }
+        #akun-aktif-page { transform: translateX(-100%); }
+        .modal-header { display: flex; align-items: center; justify-content: center; padding: 1rem 1.5rem; position: relative; border-bottom: 1px solid var(--bg-color); }
+        .modal-header-btn { position: absolute; background-color: var(--bg-color); border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-primary); }
+        #akun-aktif-page .modal-header-btn { right: 1rem; }
+        #riwayat-transaksi-page .modal-header-btn { left: 1rem; }
+        .modal-title-wrapper { background-color: var(--bg-color); padding: 0.5rem 1.5rem; border-radius: 9999px; }
+        .modal-title { font-size: 1.1rem; font-weight: 600; }
+        .modal-content { flex-grow: 1; overflow-y: auto; padding: 1.5rem; }
+        .akun-aktif-list { display: flex; flex-direction: column; gap: 1rem; }
+        .akun-card { background-color: var(--card-bg-color); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-strong); }
+        .akun-card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; cursor: pointer; }
+        .akun-header-info { display: flex; align-items: center; gap: 1rem; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; background-color: var(--accent-green); }
+        .akun-name { font-size: 1.1rem; font-weight: 600; }
+        .akun-card-header .material-symbols-outlined { transition: transform 0.3s ease; }
+        .akun-card.expanded .akun-card-header .material-symbols-outlined { transform: rotate(180deg); }
+        .akun-card-details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease, padding 0.5s ease; padding: 0 1.5rem; }
+        .akun-card.expanded .akun-card-details { max-height: 500px; padding: 1.5rem; border-top: 1px solid var(--bg-color); }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem; }
+        .detail-value { font-weight: 500; word-break: break-all; }
+        .detail-full { grid-column: span 2; }
+        .akun-actions { display: flex; gap: 1rem; }
+        .action-btn { flex: 1; border: none; padding: 0.75rem; border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+        .btn-copy { background-color: var(--accent-purple); color: white; }
+        .btn-delete { background-color: var(--accent-red); color: white; }
+        .riwayat-list { display: flex; flex-direction: column; gap: 1rem; }
+        .riwayat-item { display: flex; align-items: center; gap: 1.5rem; }
+        .riwayat-icon { width: 48px; height: 48px; border-radius: 50%; background-color: var(--card-bg-color); display: flex; align-items: center; justify-content: center; color: var(--text-primary); box-shadow: var(--shadow); }
+        .riwayat-info { display: flex; flex-direction: column; }
+        .riwayat-title { font-weight: 600; }
+        .riwayat-time { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* [BARU] CSS untuk Modal Notifikasi Kustom */
+        #custom-alert-overlay { z-index: 80; }
+        .custom-alert {
+            position: fixed; top: 50%; left: 50%;
+            width: 90%; max-width: 380px;
+            background-color: var(--card-bg-color);
+            border-radius: 20px;
+            box-shadow: var(--shadow-strong);
+            text-align: center;
+            padding: 2rem;
+            z-index: 90;
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+        }
+        .custom-alert.visible {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .custom-alert-icon-wrapper {
+            width: 64px; height: 64px;
+            margin: 0 auto 1.25rem auto;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .custom-alert-icon-wrapper .material-symbols-outlined { font-size: 36px; }
+        .custom-alert-icon-wrapper.success { background-color: rgba(46, 204, 113, 0.15); color: var(--accent-green); }
+        .custom-alert-icon-wrapper.error { background-color: rgba(231, 76, 60, 0.15); color: var(--accent-red); }
+        .custom-alert-icon-wrapper.confirm { background-color: rgba(243, 156, 18, 0.15); color: #f39c12; }
+        .custom-alert-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .custom-alert-message { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 2rem; }
+        .custom-alert-buttons { display: flex; gap: 1rem; flex-direction: column; }
+        .custom-alert-buttons.row { flex-direction: row; }
+        .custom-alert-button {
+            width: 100%; border: none; border-radius: 12px;
+            padding: 0.8rem; font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: background-color 0.2s;
+        }
+        .btn-primary-fill { background-color: var(--accent-purple); color: white; }
+        .btn-danger-fill { background-color: var(--accent-red); color: white; }
+        .btn-secondary-outline { background-color: transparent; color: var(--text-secondary); border: 2px solid var(--bg-color); }
+    </style>
+</head>
+<body class="dark">
+    <div class="container">
+        <header>
+            <button id="cs-support-btn" class="header-icon"><span class="material-symbols-outlined">support_agent</span></button>
+            <h1 class="title">Vadd VPN Store</h1>
+            <button id="theme-toggle" class="theme-toggle-btn">
+                <span class="material-symbols-outlined moon">dark_mode</span>
+                <span class="material-symbols-outlined sun">light_mode</span>
+            </button>
+        </header>
+        <main class="grid-container">
+            <div class="card">
+                <div class="card-header"><div class="icon-bg bg-green-gradient"><span class="material-symbols-outlined">account_balance_wallet</span></div><span class="card-title">Saldo</span></div>
+                <div class="card-body saldo-display" id="user-balance">Memuat...</div>
+            </div>
+            <div id="username-card" class="card card-clickable">
+                <div class="card-header"><div class="icon-bg bg-purple-gradient"><span class="material-symbols-outlined">person</span></div><span class="card-title">Username</span></div>
+                <div class="card-body username-display" id="user-username">Memuat...</div>
+            </div>
+            <div id="akun-aktif-card" class="card card-clickable">
+                <div class="card-header"><div class="icon-bg bg-blue-gradient"><span class="material-symbols-outlined">dns</span></div><span class="card-title">Akun Aktif</span></div>
+                <div class="card-body" id="akun-aktif-count">0</div>
+            </div>
+            <div id="this-month-card" class="card">
+                <div class="card-header"><div class="icon-bg bg-orange-gradient"><span class="material-symbols-outlined">receipt_long</span></div><span class="card-title">Pengeluaran Bulan Ini</span></div>
+                <div class="card-body" id="month-charges">Memuat...</div>
+            </div>
+            <div id="riwayat-transaksi-card" class="card card-full card-clickable">
+                <div class="card-header">
+                    <div class="icon-bg bg-gray-gradient"><span class="material-symbols-outlined">history</span></div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="card-title" style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Riwayat Transaksi</span>
+                        <span class="sub-info">Lihat semua pembelian config</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Panel-panel (Tidak Berubah) -->
+    <button id="fab-transaksi" class="fab-transaksi">
+        <div class="fab-icon-wrapper">
+            <svg viewBox="0 0 24 24"><path d="M11.8,10.9c-2.27-0.59-3-1.2-3-2.15c0-0.93,0.75-1.5,2.1-1.5c1.6,0,2.4,0.83,2.4,2.3h2.2c0-2.2-1.5-3.5-4.6-3.5 C7.3,6.05,5.8,7.45,5.8,9.15c0,1.95,1.5,2.9,4.1,3.5c2.5,0.6,3,1.45,3,2.4c0,0.85-0.75,1.6-2.2,1.6c-1.75,0-2.8-0.8-2.8-2.6H8.1 c0,2.3,1.8,3.6,5.2,3.6c3.3,0,5.1-1.3,5.1-3.15C18.4,12.55,15.1,11.7,11.8,10.9z M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10 s10-4.48,10-10S17.52,2,12,2z M12,20c-4.41,0-8-3.59-8-8s3.59-8,8-8s8,3.59,8,8S16.41,20,12,20z"></path></svg>
+        </div>
+        <span>Transaksi</span>
+    </button>
+    <div id="main-overlay" class="sheet-overlay"></div>
+    <div id="bottom-sheet-panel" class="panel bottom-sheet-panel">
+        <div class="sheet-grabber"></div><h2 class="sheet-header">Menu Transaksi</h2>
+        <div class="sheet-menu">
+            <a href="/topup" class="sheet-menu-tile"><div class="tile-icon-background bg-gradient-green"><span class="material-symbols-outlined">add_card</span></div><div class="tile-text"><span class="tile-title">TOPUP SALDO</span><span class="tile-subtitle">Pilih metode pembayaran</span></div></a>
+            <a href="/store" class="sheet-menu-tile"><div class="tile-icon-background bg-gradient-purple"><span class="material-symbols-outlined">add_box</span></div><div class="tile-text"><span class="tile-title">BUAT CONFIG</span><span class="tile-subtitle">Pastikan saldo cukup</span></div></a>
+        </div>
+    </div>
+    <div id="top-sheet-panel" class="panel top-sheet-panel">
+        <h2 class="sheet-header">Ada kendala? Hubungi kami!</h2>
+        <div class="contact-list">
+            <a href="https://wa.me/6283862724915" target="_blank" class="contact-item"><svg viewBox="0 0 24 24" fill="#25D366"><path d="M16.75 13.96c.25.79-.39 1.51-1.61 2.05-.62.27-1.39.4-2.61.13-1.29-.29-2.52-.76-3.69-1.93s-1.64-2.4-1.93-3.69c-.27-1.22-.14-1.99.13-2.61.54-1.22 1.26-1.86 2.05-1.61.27.08.5.21.69.37.21.19.33.44.39.72.08.37-.02.82-.24 1.34l-.49 1.13c-.11.25-.13.53-.06.79.23.85.74 1.63 1.48 2.37.74.74 1.52 1.25 2.37 1.48.26.07.54.05.79-.06l1.13-.49c.52-.22.97-.32 1.34-.24.28.06.53.18.72.39.16.19.29.42.37.69zm-5.28-10.43c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9m0-2c6.08 0 11 4.92 11 11s-4.92 11-11 11-11-4.92-11-11 4.92-11 11-11z"/></svg><span>WHATSAPP</span></a>
+            <a href="https://t.me/vadd999" target="_blank" class="contact-item"><svg viewBox="0 0 24 24" fill="#0088cc"><path d="M9.78 18.65l.28-4.23-3.06-2.65-4.18 2.52 5.32 2.62.94 1.74zm-3.02-4.83l3.34-2.92-4.9-2.02 6.54 2.53.23 4.42-5.21-2.01zM22 11.33c0-4.02-3.28-7.3-7.3-7.3-4.02 0-7.3 3.28-7.3 7.3s3.28 7.3 7.3 7.3c4.02 0 7.3-3.28 7.3-7.3z"/></svg><span>TELEGRAM</span></a>
+        </div>
+    </div>
+    <div id="profile-sheet-panel" class="panel side-sheet-panel">
+        <div class="side-sheet-header"><span class="side-sheet-title">Profil Akun</span><button class="header-icon" data-close-panel style="width:40px;height:40px;box-shadow:none;"><span class="material-symbols-outlined">close</span></button></div>
+        <div class="side-sheet-content">
+            <div class="profile-top-section">
+                <img src="https://i.pravatar.cc/150" alt="Avatar" class="profile-avatar" id="profile-avatar-img">
+                <div class="profile-name-section">
+                    <h3 class="profile-name" id="profile-fullname">Memuat...</h3>
+                    <button id="edit-profile-btn"><span class="material-symbols-outlined">edit</span><span>Edit</span></button>
+                </div>
+            </div>
+            <div class="profile-details-list">
+                 <div class="profile-info-item"><span class="material-symbols-outlined">badge</span><div class="profile-info-text"><span class="profile-info-label">Username</span><span class="profile-info-value" data-id="username"></span><input type="text" class="profile-info-input" data-id="username" style="display: none;"></div></div>
+                 <div class="profile-info-item"><span class="material-symbols-outlined">cake</span><div class="profile-info-text"><span class="profile-info-label">Tanggal Lahir</span><span class="profile-info-value" data-id="birth_date"></span><input type="date" class="profile-info-input" data-id="birth_date" style="display: none;"></div></div>
+                 <div class="profile-info-item"><span class="material-symbols-outlined">mail</span><div class="profile-info-text"><span class="profile-info-label">Email</span><span class="profile-info-value" data-id="email"></span><input type="email" class="profile-info-input" data-id="email" style="display: none;"></div></div>
+                 <div class="profile-info-item"><span class="material-symbols-outlined">call</span><div class="profile-info-text"><span class="profile-info-label">No. HP</span><span class="profile-info-value" data-id="phone"></span><input type="tel" class="profile-info-input" data-id="phone" style="display: none;"></div></div>
+                 <div class="profile-info-item"><span class="material-symbols-outlined">home</span><div class="profile-info-text"><span class="profile-info-label">Alamat</span><span class="profile-info-value" data-id="address"></span><textarea class="profile-info-input" data-id="address" rows="3" style="display: none;"></textarea></div></div>
+            </div>
+        </div>
+        <div class="side-sheet-footer">
+            <a href="/api/logout" id="logout-btn" class="footer-btn">Keluar</a>
+            <button id="save-profile-btn" class="footer-btn" disabled style="display: none;">Simpan Perubahan</button>
+        </div>
+    </div>
+    <div id="akun-aktif-page" class="panel fullscreen-modal from-left">
+        <header class="modal-header">
+            <div class="modal-title-wrapper"><h2 class="modal-title">Akun Aktif</h2></div>
+            <button class="modal-header-btn right" data-close-panel><span class="material-symbols-outlined">arrow_forward_ios</span></button>
+        </header>
+        <div class="modal-content"><div id="akun-aktif-list-container" class="akun-aktif-list"></div></div>
+    </div>
+    <div id="riwayat-transaksi-page" class="panel fullscreen-modal from-right">
+        <header class="modal-header">
+            <button class="modal-header-btn left" data-close-panel><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <div class="modal-title-wrapper"><h2 class="modal-title">Riwayat Transaksi</h2></div>
+        </header>
+        <div class="modal-content"><div id="riwayat-list-container" class="riwayat-list"></div></div>
+    </div>
+
+    <!-- [BARU] HTML untuk Modal Notifikasi Kustom -->
+    <div id="custom-alert-overlay" class="sheet-overlay"></div>
+    <div id="custom-alert-modal" class="custom-alert">
+        <div id="custom-alert-icon" class="custom-alert-icon-wrapper">
+            <span class="material-symbols-outlined"></span>
+        </div>
+        <h3 id="custom-alert-title" class="custom-alert-title"></h3>
+        <p id="custom-alert-message" class="custom-alert-message"></p>
+        <div id="custom-alert-buttons" class="custom-alert-buttons"></div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const baseUrl = window.location.origin;
+
+        // --- [BARU] BAGIAN 0: SISTEM MODAL NOTIFIKASI KUSTOM ---
+        const alertModal = {
+            overlay: document.getElementById('custom-alert-overlay'),
+            modal: document.getElementById('custom-alert-modal'),
+            icon: document.getElementById('custom-alert-icon'),
+            iconSpan: document.getElementById('custom-alert-icon').querySelector('span'),
+            title: document.getElementById('custom-alert-title'),
+            message: document.getElementById('custom-alert-message'),
+            buttons: document.getElementById('custom-alert-buttons'),
+            
+            show(options) {
+                this.title.textContent = options.title || '';
+                this.message.innerHTML = options.message || '';
+                
+                this.icon.className = 'custom-alert-icon-wrapper'; // Reset class
+                if (options.type) {
+                    this.icon.classList.add(options.type);
+                    switch(options.type) {
+                        case 'success': this.iconSpan.textContent = 'check_circle'; break;
+                        case 'error': this.iconSpan.textContent = 'error'; break;
+                        case 'confirm': this.iconSpan.textContent = 'help'; break;
+                    }
+                }
+
+                this.buttons.innerHTML = '';
+                this.buttons.className = 'custom-alert-buttons';
+                
+                if (options.type === 'confirm') {
+                    this.buttons.classList.add('row');
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'custom-alert-button btn-secondary-outline';
+                    cancelBtn.textContent = options.cancelText || 'Batal';
+                    cancelBtn.onclick = () => {
+                        this.hide();
+                        if (options.onCancel) options.onCancel();
+                    };
+                    
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.className = 'custom-alert-button btn-danger-fill';
+                    confirmBtn.textContent = options.confirmText || 'Ya';
+                    confirmBtn.onclick = () => {
+                        this.hide();
+                        if (options.onConfirm) options.onConfirm();
+                    };
+                    
+                    this.buttons.appendChild(cancelBtn);
+                    this.buttons.appendChild(confirmBtn);
+                } else {
+                    const okBtn = document.createElement('button');
+                    okBtn.className = 'custom-alert-button btn-primary-fill';
+                    okBtn.textContent = options.okText || 'Mengerti';
+                    okBtn.onclick = () => {
+                        this.hide();
+                        if (options.onOk) options.onOk();
+                    };
+                    this.buttons.appendChild(okBtn);
+                }
+                
+                this.overlay.classList.add('visible');
+                this.modal.classList.add('visible');
+            },
+            
+            hide() {
+                this.overlay.classList.remove('visible');
+                this.modal.classList.remove('visible');
+            }
+        };
+        alertModal.overlay.addEventListener('click', () => alertModal.hide());
+
+
+        // --- BAGIAN 1: KONTROL PANEL ---
+        function initPanelControls() {
+            const overlay = document.getElementById('main-overlay');
+            let activePanel = null;
+            const openPanel = (panelId) => {
+                if (activePanel) closePanel();
+                const panel = document.getElementById(panelId);
+                if (panel) {
+                    panel.classList.add('visible');
+                    overlay.classList.add('visible');
+                    activePanel = panel;
+                }
+            };
+            const closePanel = () => {
+                if (activePanel) {
+                    activePanel.classList.remove('visible');
+                }
+                overlay.classList.remove('visible');
+                activePanel = null;
+            };
+            document.getElementById('fab-transaksi').addEventListener('click', () => openPanel('bottom-sheet-panel'));
+            document.getElementById('cs-support-btn').addEventListener('click', () => openPanel('top-sheet-panel'));
+            document.getElementById('username-card').addEventListener('click', () => openPanel('profile-sheet-panel'));
+            document.getElementById('akun-aktif-card').addEventListener('click', () => openPanel('akun-aktif-page'));
+            document.getElementById('riwayat-transaksi-card').addEventListener('click', () => openPanel('riwayat-transaksi-page'));
+            document.querySelectorAll('[data-close-panel]').forEach(btn => btn.addEventListener('click', closePanel));
+            overlay.addEventListener('click', closePanel);
+        }
+
+        // --- BAGIAN 2: MEMUAT DATA DASHBOARD ---
+        async function loadData() {
+            const formatCurrency = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+            try {
+                const userRes = await fetch(`${baseUrl}/api/user_data`);
+                if (!userRes.ok) throw new Error('Sesi tidak valid');
+                const { data: userData } = await userRes.json();
+                document.getElementById('user-username').textContent = userData.username;
+                document.getElementById('user-balance').textContent = formatCurrency(userData.balance);
+                populateProfile(userData);
+            } catch (e) { console.error("Gagal memuat data user:", e); window.location.href = '/'; }
+            try {
+                const activeConfigsRes = await fetch(`${baseUrl}/api/active_configs`);
+                const activeConfigsData = await activeConfigsRes.json();
+                document.getElementById('akun-aktif-count').textContent = activeConfigsData.length;
+                populateAkunAktif(activeConfigsData);
+            } catch (e) { console.error("Gagal memuat config aktif:", e); }
+            try {
+                const historyRes = await fetch(`${baseUrl}/api/purchase_history`);
+                const historyData = await historyRes.json();
+                populateRiwayat(historyData);
+            } catch (e) { console.error("Gagal memuat riwayat:", e); }
+            try {
+                const monthlyChargesRes = await fetch(`${baseUrl}/api/monthly_charges`);
+                const monthlyChargesData = await monthlyChargesRes.json();
+                document.getElementById('month-charges').textContent = formatCurrency(monthlyChargesData.total_charges);
+            } catch (e) { console.error("Gagal memuat pengeluaran bulanan:", e); }
+        }
+        
+        // --- BAGIAN 3: FUNGSI UNTUK MENGISI PANEL ---
+        function populateProfile(data) {
+            document.getElementById('profile-avatar-img').src = `https://i.pravatar.cc/150?u=${data.username}`;
+            document.getElementById('profile-fullname').textContent = data.full_name || data.username;
+            document.querySelectorAll('#profile-sheet-panel .profile-info-text').forEach(item => {
+                const display = item.querySelector('.profile-info-value');
+                const input = item.querySelector('.profile-info-input');
+                const key = display.dataset.id;
+                const value = data[key] || '-';
+                display.textContent = value;
+                if (input) input.value = value === '-' ? '' : value;
+            });
+        }
+        function populateAkunAktif(configs) {
+            const container = document.getElementById('akun-aktif-list-container');
+            if (configs.length === 0) { container.innerHTML = '<p style="text-align:center; color: var(--text-secondary);">Belum ada config aktif.</p>'; return; }
+            container.innerHTML = configs.map(config => `
+                <div class="akun-card" id="akun-card-${config.id}">
+                    <div class="akun-card-header"><div class="akun-header-info"><div class="status-dot"></div><span class="akun-name">${config.remark}</span></div><span class="material-symbols-outlined">expand_more</span></div>
+                    <div class="akun-card-details">
+                        <div class="details-grid">
+                            <div class="detail-item"><span class="detail-label">Protokol</span><span class="detail-value">${config.protocol.toUpperCase()} WS TLS</span></div>
+                            <div class="detail-item"><span class="detail-label">Status</span><span class="detail-value" style="color: var(--accent-green); text-transform: capitalize;">${config.status}</span></div>
+                            <div class="detail-item"><span class="detail-label">Tgl Pembelian</span><span class="detail-value">${new Date(config.created_at).toLocaleString('id-ID')}</span></div>
+                            <div class="detail-item detail-full"><span class="detail-label">UUID</span><span class="detail-value">${config.uuid}</span></div>
+                        </div>
+                        <div class="detail-item detail-full" style="margin-bottom: 1.5rem;">
+                            <span class="detail-label">Link Akun</span>
+                            <textarea class="account-link" rows="4" readonly style="width: 100%; background-color: var(--bg-color); border: none; border-radius: 8px; padding: 0.5rem; color: var(--text-secondary); font-family: monospace; resize: none;">${config.link}</textarea>
+                        </div>
+                        <div class="akun-actions">
+                            <button class="action-btn btn-copy" data-link="${config.link}"><span class="material-symbols-outlined">content_copy</span><span>Copy Link</span></button>
+                            <button class="action-btn btn-delete" data-config-id="${config.id}" data-remark="${config.remark}"><span class="material-symbols-outlined">delete</span><span>Hapus Akun</span></button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+        function populateRiwayat(configs) {
+            const container = document.getElementById('riwayat-list-container');
+            if (configs.length === 0) { container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Belum ada riwayat transaksi.</p>'; return; }
+            container.innerHTML = configs.map(config => `
+                <div class="riwayat-item">
+                    <div class="riwayat-icon"><span class="material-symbols-outlined">receipt_long</span></div>
+                    <div class="riwayat-info">
+                        <span class="riwayat-title">Beli: ${config.remark} - ${config.protocol.toUpperCase()}</span>
+                        <span class="riwayat-time">${new Date(config.created_at).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}</span>
+                    </div>
+                </div>`).join('');
+        }
+
+        // --- BAGIAN 4: INTERAKSI DI DALAM PANEL (DIPERBARUI) ---
+        function initPanelInteractions() {
+            document.getElementById('akun-aktif-list-container').addEventListener('click', (e) => {
+                const header = e.target.closest('.akun-card-header');
+                const copyBtn = e.target.closest('.btn-copy');
+                const deleteBtn = e.target.closest('.btn-delete');
+
+                if (header) { header.parentElement.classList.toggle('expanded'); }
+                if (copyBtn) {
+                    navigator.clipboard.writeText(copyBtn.dataset.link).then(() => {
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<span>Tersalin!</span>';
+                        setTimeout(() => { copyBtn.innerHTML = originalText; }, 2000);
+                    });
+                }
+                if (deleteBtn) {
+                    const configId = deleteBtn.dataset.configId;
+                    const remark = deleteBtn.dataset.remark;
+                    
+                    alertModal.show({
+                        type: 'confirm',
+                        title: 'Konfirmasi Hapus',
+                        message: `Apakah Anda yakin ingin menghapus config "<b>${remark}</b>"? Akun ini akan dinonaktifkan secara permanen.`,
+                        confirmText: 'Ya, Hapus',
+                        onConfirm: () => {
+                            fetch(`${baseUrl}/api/delete_config/${configId}`, { method: 'POST' })
+                                .then(res => res.json())
+                                .then(result => {
+                                    if (result.message.includes('berhasil')) {
+                                        alertModal.show({
+                                            type: 'success',
+                                            title: 'Berhasil Dihapus',
+                                            message: result.message,
+                                            onOk: () => loadData()
+                                        });
+                                    } else {
+                                        alertModal.show({
+                                            type: 'error',
+                                            title: 'Gagal Menghapus',
+                                            message: result.message
+                                        });
+                                    }
+                                })
+                                .catch(err => {
+                                    alertModal.show({
+                                        type: 'error',
+                                        title: 'Error',
+                                        message: 'Gagal terhubung ke server. Silakan coba lagi.'
+                                    });
+                                });
+                        }
+                    });
+                }
+            });
+        }
+        
+        // --- BAGIAN 5: FUNGSI STABIL (TEMA & EDIT PROFIL) ---
+        function initThemeToggle() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const applyTheme = (isDark) => { document.body.classList.toggle('dark', isDark); };
+            let isDarkMode = localStorage.getItem('theme') === 'dark';
+            applyTheme(isDarkMode);
+            themeToggle.addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                applyTheme(isDarkMode);
+            });
+        }
+        function initProfileInteraction() {
+            const editProfileBtn = document.getElementById('edit-profile-btn');
+            const saveProfileBtn = document.getElementById('save-profile-btn');
+            const infoItems = document.querySelectorAll('#profile-sheet-panel .profile-info-text');
+            let originalData = {};
+            const toggleEditMode = (forceClose = false) => {
+                const isEditing = editProfileBtn.classList.contains('active');
+                if (forceClose && !isEditing) return;
+                if (forceClose) { editProfileBtn.classList.remove('active'); } 
+                else { editProfileBtn.classList.toggle('active'); }
+                const nowEditing = editProfileBtn.classList.contains('active');
+                saveProfileBtn.style.display = nowEditing ? 'block' : 'none';
+                document.getElementById('logout-btn').style.display = nowEditing ? 'none' : 'block';
+                editProfileBtn.innerHTML = `<span class="material-symbols-outlined">${nowEditing ? 'cancel' : 'edit'}</span> ${nowEditing ? 'Batal' : 'Edit'}`;
+                infoItems.forEach(item => {
+                    const display = item.querySelector('.profile-info-value');
+                    const input = item.querySelector('.profile-info-input');
+                    display.style.display = nowEditing ? 'none' : 'block';
+                    input.style.display = nowEditing ? 'block' : 'none';
+                    if(nowEditing) { originalData[input.dataset.id] = input.value; } 
+                    else { input.value = originalData[input.dataset.id]; }
+                });
+                if(nowEditing) checkForChanges();
+            };
+            const checkForChanges = () => {
+                let hasChanged = false;
+                infoItems.forEach(item => {
+                    const input = item.querySelector('.profile-info-input');
+                    if (input.value !== originalData[input.dataset.id]) hasChanged = true;
+                });
+                saveProfileBtn.disabled = !hasChanged;
+            };
+            editProfileBtn.addEventListener('click', () => toggleEditMode());
+            infoItems.forEach(item => {
+                const input = item.querySelector('.profile-info-input');
+                if(input) input.addEventListener('input', checkForChanges);
+            });
+            saveProfileBtn.addEventListener('click', async () => {
+                const updatedData = {};
+                infoItems.forEach(item => {
+                    const input = item.querySelector('.profile-info-input');
+                    updatedData[input.dataset.id] = input.value;
+                });
+                try {
+                    const response = await fetch(`${baseUrl}/api/update_profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedData)
+                    });
+                    const result = await response.json();
+                    alertModal.show({ type: response.ok ? 'success' : 'error', title: response.ok ? 'Berhasil' : 'Gagal', message: result.message });
+                    if (response.ok) {
+                        await loadData(); 
+                        toggleEditMode(true);
+                    }
+                } catch(err) {
+                    alertModal.show({ type: 'error', title: 'Error', message: 'Gagal menyimpan. Periksa koneksi Anda.' });
+                }
+            });
+        }
+
+        // --- MENJALANKAN SEMUA FUNGSI ---
+        initPanelControls();
+        loadData();
+        initPanelInteractions();
+        initThemeToggle();
+        initProfileInteraction();
+    });
+    </script>
+</body>
+</html>
+
+
